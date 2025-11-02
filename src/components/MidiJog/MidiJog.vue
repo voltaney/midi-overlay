@@ -1,32 +1,57 @@
-<script setup>
-import { ref, onMounted, watch } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, watch, computed } from 'vue'
 import MidiJogCanvas from './MidiJogCanvas.vue'
 import MidiJogSettings from './MidiJogSettings.vue'
-import { useJogSettings } from '../../composables/useJogSettings'
-import { useMidiInput } from '../../composables/useMidiInput'
-import { useCanvasAnimation } from '../../composables/useCanvasAnimation'
+import { useJogSettings } from '@/composables/useJogSettings'
+import { useMidiInput } from '@/composables/useMidiInput'
+import { useCanvasAnimation } from '@/composables/useCanvasAnimation'
+import { useInertialRotation, type InertiaSettings } from '@/composables/useInertialRotation'
+import { logger } from '@/utils/logger'
+import { MIDI_VALUES } from '@/constants/midi'
+import type { MidiMessage } from '@/types'
 
 const { settings } = useJogSettings()
 
-const angle = ref(0) // refに変更
-const canvasRef = ref(null)
+/** Canvasコンポーネントの参照 */
+const canvasRef = ref<InstanceType<typeof MidiJogCanvas> | null>(null)
 
-// Canvas描画
-const { requestRedraw } = useCanvasAnimation(() => {
+/** 慣性設定（settingsから必要な値を抽出） */
+const inertiaSettings = computed<InertiaSettings>(() => ({
+  decayRate: settings.inertiaDecayRate,
+  minVelocity: settings.inertiaMinVelocity,
+}))
+
+/** 慣性付き回転管理 */
+const { angle, addVelocity, update } = useInertialRotation(inertiaSettings)
+
+/** Canvas描画処理 */
+const { requestRedraw } = useCanvasAnimation((deltaTime: number) => {
+  // 慣性計算を実行
+  const shouldContinue = update(deltaTime)
+
+  // Canvas描画
   canvasRef.value?.draw()
+
+  // 描画継続が必要かどうかを返す
+  return shouldContinue
 })
 
-// MIDIメッセージ処理
-function onMIDIMessage(msg) {
+/**
+ * MIDIメッセージ処理
+ * ジョグホイールの回転操作を検出して速度を加算
+ */
+function onMIDIMessage(msg: MidiMessage): void {
   const [, , data2] = msg.data
 
-  if (data2 === 127 || data2 === 0) {
+  // 最大値・最小値は無視
+  if (data2 === MIDI_VALUES.MAX_VALUE || data2 === MIDI_VALUES.MIN_VALUE) {
     return
   }
 
-  const delta = data2 - 64
+  // 中央値からの差分で回転方向と量を計算し、速度に加算
+  const delta = data2 - MIDI_VALUES.NEUTRAL_VALUE
   if (delta !== 0) {
-    angle.value += delta * settings.rotationSpeed // .valueを追加
+    addVelocity(delta * settings.rotationSpeed)
     requestRedraw()
   }
 }
@@ -44,50 +69,21 @@ watch(
 )
 
 onMounted(() => {
-  console.log('draw once on mounted')
+  logger.debug('初回描画を実行')
   requestRedraw()
 })
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="../../assets/logo.svg" width="125" height="125" />
-    <div class="wrapper"></div>
-  </header>
-
-  <MidiJogCanvas ref="canvasRef" :angle="angle" :settings="settings" />
-
-  <MidiJogSettings
-    v-model:rotation-speed="settings.rotationSpeed"
-    v-model:arc-color="settings.arcColor"
-    v-model:marker-color="settings.markerColor"
-    v-model:disk-color="settings.diskColor"
-  />
+  <main>
+    <MidiJogCanvas ref="canvasRef" :angle="angle" :settings="settings" />
+  </main>
+  <MidiJogSettings :settings="settings" @update:settings="Object.assign(settings, $event)" />
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    flex-direction: column;
-  }
+main {
+  background-color: #0f0;
+  padding: 20px;
 }
 </style>

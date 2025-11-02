@@ -1,70 +1,274 @@
-<script setup>
+<script setup lang="ts">
+import { ref } from 'vue'
 import ColorSetting from './ColorSettings.vue'
+import type { JogSettings } from '@/types'
+import { imageFileToBase64, validateImageFile } from '@/utils/imageUtils'
+import { logger } from '@/utils/logger'
 
-defineProps({
-  rotationSpeed: {
-    type: Number,
-    required: true,
-  },
-  arcColor: {
-    type: String,
-    required: true,
-  },
-  markerColor: {
-    type: String,
-    required: true,
-  },
-  diskColor: {
-    type: String,
-    required: true,
-  },
-})
+/** Props定義 */
+interface Props {
+  /** ジョグホイール設定 */
+  settings: JogSettings
+}
 
-const emit = defineEmits([
-  'update:rotationSpeed',
-  'update:arcColor',
-  'update:markerColor',
-  'update:diskColor',
-])
+const props = defineProps<Props>()
+
+/** Emits定義 */
+const emit = defineEmits<{
+  'update:settings': [updates: Partial<JogSettings>]
+}>()
+
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const isUploadingImage = ref(false)
+
+/**
+ * 設定を更新
+ * 部分的な更新をemit
+ */
+function updateSettings(updates: Partial<JogSettings>): void {
+  emit('update:settings', updates)
+}
+
+/**
+ * 画像ファイル選択ハンドラ
+ */
+async function handleImageSelect(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) return
+
+  // バリデーション
+  const error = validateImageFile(file)
+  if (error) {
+    alert(error)
+    input.value = ''
+    return
+  }
+
+  try {
+    isUploadingImage.value = true
+    const base64 = await imageFileToBase64(file)
+    updateSettings({ diskBackgroundImage: base64 })
+  } catch (e) {
+    logger.error('画像のアップロードに失敗:', e)
+    alert('画像のアップロードに失敗しました')
+  } finally {
+    isUploadingImage.value = false
+    input.value = ''
+  }
+}
+
+/**
+ * 画像削除ハンドラ
+ */
+function handleImageRemove(): void {
+  updateSettings({ diskBackgroundImage: undefined })
+}
+
+/**
+ * ファイル選択ダイアログを開く
+ */
+function openFileDialog(): void {
+  fileInputRef.value?.click()
+}
+
+/**
+ * 円弧の半径変更ハンドラ
+ * 内円の半径とマーカーの長さを割合で調整
+ */
+function handleArcRadiusChange(event: Event): void {
+  const newArcRadius = Number((event.target as HTMLInputElement).value)
+  const oldArcRadius = props.settings.arcRadius
+  const changedRatio = newArcRadius / oldArcRadius
+
+  updateSettings({
+    arcRadius: newArcRadius,
+    diskRadius: Math.round(changedRatio * props.settings.diskRadius),
+    markerLength: Math.round(changedRatio * props.settings.markerLength),
+  })
+}
 </script>
 
 <template>
   <aside>
     <h2>設定</h2>
-    <h3>MIDI機器</h3>
 
-    <div class="settings">
-      <div class="setting-item">
-        <label for="rotationSpeed">回転速度:</label>
-        <input
-          id="rotationSpeed"
-          type="range"
-          :value="rotationSpeed"
-          @input="emit('update:rotationSpeed', Number($event.target.value))"
-          min="0.01"
-          max="0.2"
-          step="0.01"
-        />
-        <span>{{ rotationSpeed.toFixed(2) }}</span>
-      </div>
+    <div class="settings-grid">
+      <!-- 回転速度 -->
+      <section class="settings-section">
+        <h3>MIDI機器</h3>
+        <div class="setting-item">
+          <label for="rotationSpeed">回転速度:</label>
+          <input
+            id="rotationSpeed"
+            type="range"
+            :value="settings.rotationSpeed"
+            @input="
+              updateSettings({ rotationSpeed: Number(($event.target as HTMLInputElement).value) })
+            "
+            min="0.01"
+            max="0.2"
+            step="0.01"
+          />
+          <span>{{ settings.rotationSpeed.toFixed(2) }}</span>
+        </div>
+        <div class="setting-item">
+          <label for="inertiaDecayRate">慣性の減衰率:</label>
+          <input
+            id="inertiaDecayRate"
+            type="range"
+            :value="settings.inertiaDecayRate"
+            @input="
+              updateSettings({ inertiaDecayRate: Number(($event.target as HTMLInputElement).value) })
+            "
+            min="0.50"
+            max="0.99"
+            step="0.01"
+          />
+          <span>{{ settings.inertiaDecayRate.toFixed(2) }}</span>
+        </div>
+        <div class="setting-item">
+          <label for="inertiaMinVelocity">慣性の最小速度:</label>
+          <input
+            id="inertiaMinVelocity"
+            type="range"
+            :value="settings.inertiaMinVelocity"
+            @input="
+              updateSettings({
+                inertiaMinVelocity: Number(($event.target as HTMLInputElement).value),
+              })
+            "
+            min="0.0001"
+            max="0.01"
+            step="0.0001"
+          />
+          <span>{{ settings.inertiaMinVelocity.toFixed(4) }}</span>
+        </div>
+      </section>
 
-      <ColorSetting
-        :model-value="arcColor"
-        @update:model-value="emit('update:arcColor', $event)"
-        label="円弧の色"
-      />
+      <!-- 外円（円弧） -->
+      <section class="settings-section">
+        <h3>外円</h3>
+        <div class="two-column-grid">
+          <ColorSetting
+            :model-value="settings.arcColor"
+            @update:model-value="updateSettings({ arcColor: $event })"
+            label="色"
+          />
+          <div class="setting-item">
+            <label for="arcRadius">半径:</label>
+            <input
+              id="arcRadius"
+              type="range"
+              :value="settings.arcRadius"
+              @input="handleArcRadiusChange"
+              min="50"
+              max="150"
+              step="1"
+            />
+            <span>{{ settings.arcRadius }}</span>
+          </div>
+        </div>
+      </section>
 
-      <ColorSetting
-        :model-value="markerColor"
-        @update:model-value="emit('update:markerColor', $event)"
-        label="マーカーの色"
-      />
+      <!-- 内円（ディスク） -->
+      <section class="settings-section">
+        <h3>内円</h3>
+        <div class="two-column-grid">
+          <ColorSetting
+            :model-value="settings.diskColor"
+            @update:model-value="updateSettings({ diskColor: $event })"
+            label="色"
+          />
+          <div class="setting-column">
+            <div class="setting-item">
+              <label for="diskRadius">半径:</label>
+              <input
+                id="diskRadius"
+                type="range"
+                :value="settings.diskRadius"
+                @input="
+                  updateSettings({ diskRadius: Number(($event.target as HTMLInputElement).value) })
+                "
+                min="10"
+                :max="settings.arcRadius"
+                step="1"
+              />
+              <span>{{ settings.diskRadius }}</span>
+            </div>
+            <div class="image-upload-section">
+              <h4>背景画像</h4>
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*"
+                @change="handleImageSelect"
+                style="display: none"
+              />
+              <div v-if="settings.diskBackgroundImage" class="image-preview">
+                <img :src="settings.diskBackgroundImage" alt="背景画像プレビュー" />
+                <button @click="handleImageRemove" type="button" class="remove-button">
+                  削除
+                </button>
+              </div>
+              <button
+                v-else
+                @click="openFileDialog"
+                type="button"
+                class="upload-button"
+                :disabled="isUploadingImage"
+              >
+                {{ isUploadingImage ? 'アップロード中...' : '画像をアップロード' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <ColorSetting
-        :model-value="diskColor"
-        @update:model-value="emit('update:diskColor', $event)"
-        label="中央ディスクの色"
-      />
+      <!-- マーカー -->
+      <section class="settings-section">
+        <h3>マーカー</h3>
+        <div class="two-column-grid">
+          <ColorSetting
+            :model-value="settings.markerColor"
+            @update:model-value="updateSettings({ markerColor: $event })"
+            label="色"
+          />
+          <div class="setting-column">
+            <div class="setting-item">
+              <label for="markerWidth">太さ:</label>
+              <input
+                id="markerWidth"
+                type="range"
+                :value="settings.markerWidth"
+                @input="
+                  updateSettings({ markerWidth: Number(($event.target as HTMLInputElement).value) })
+                "
+                min="1"
+                max="10"
+                step="1"
+              />
+              <span>{{ settings.markerWidth }}</span>
+            </div>
+            <div class="setting-item">
+              <label for="markerLength">長さ:</label>
+              <input
+                id="markerLength"
+                type="range"
+                :value="settings.markerLength"
+                @input="
+                  updateSettings({ markerLength: Number(($event.target as HTMLInputElement).value) })
+                "
+                min="10"
+                :max="settings.arcRadius"
+                step="1"
+              />
+              <span>{{ settings.markerLength }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </aside>
 </template>
@@ -74,31 +278,171 @@ aside {
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  height: 100vh;
+  overflow: auto;
+  background: #f5f5f5;
+  color: #333;
 }
 
-.settings {
+aside > h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2em;
+  color: #333;
+  font-weight: 600;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.settings-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section h3 {
+  margin: 0;
+  font-size: 1em;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3b82f6;
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.setting-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .setting-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .setting-item label {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.85em;
+  color: #555;
 }
 
 .setting-item input[type='range'] {
   width: 100%;
+  height: 5px;
+  background: #ddd;
+  border-radius: 3px;
+  outline: none;
+}
+
+.setting-item input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.setting-item input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .setting-item span {
-  font-size: 0.9em;
+  font-size: 0.8em;
   color: #666;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.image-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.image-upload-section h4 {
+  margin: 0;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #555;
+}
+
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.image-preview img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.upload-button,
+.remove-button {
+  padding: 0.4rem 0.7rem;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.upload-button:hover:not(:disabled),
+.remove-button:hover {
+  background: #2563eb;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.upload-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.remove-button {
+  background: #ef4444;
+}
+
+.remove-button:hover {
+  background: #dc2626;
 }
 </style>
