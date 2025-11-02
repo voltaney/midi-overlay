@@ -113,6 +113,38 @@ function handleArcRadiusChange(event: Event): void {
           />
           <span>{{ settings.rotationSpeed.toFixed(2) }}</span>
         </div>
+        <div class="setting-item">
+          <label for="inertiaDecayRate">慣性の減衰率:</label>
+          <input
+            id="inertiaDecayRate"
+            type="range"
+            :value="settings.inertiaDecayRate"
+            @input="
+              updateSettings({ inertiaDecayRate: Number(($event.target as HTMLInputElement).value) })
+            "
+            min="0.50"
+            max="0.99"
+            step="0.01"
+          />
+          <span>{{ settings.inertiaDecayRate.toFixed(2) }}</span>
+        </div>
+        <div class="setting-item">
+          <label for="inertiaMinVelocity">慣性の最小速度:</label>
+          <input
+            id="inertiaMinVelocity"
+            type="range"
+            :value="settings.inertiaMinVelocity"
+            @input="
+              updateSettings({
+                inertiaMinVelocity: Number(($event.target as HTMLInputElement).value),
+              })
+            "
+            min="0.0001"
+            max="0.01"
+            step="0.0001"
+          />
+          <span>{{ settings.inertiaMinVelocity.toFixed(4) }}</span>
+        </div>
       </section>
 
       <!-- 外円（円弧） -->

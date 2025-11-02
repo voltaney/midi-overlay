@@ -22,6 +22,10 @@ export interface JogSettings {
   markerLength: number
   /** ディスク背景画像 (Base64形式、オプション) */
   diskBackgroundImage?: string
+  /** 慣性の減衰率 (0.50 ~ 0.99、1に近いほど長く回る) */
+  inertiaDecayRate: number
+  /** 慣性の停止判定速度 (0.0001 ~ 0.01、小さいほど長く回る) */
+  inertiaMinVelocity: number
 }
 
 /** デフォルトのジョグホイール設定値 */
@@ -34,4 +38,6 @@ export const DEFAULT_JOG_SETTINGS: Readonly<JogSettings> = {
   markerColor: '#00ff0088',
   markerWidth: 4,
   markerLength: 30,
+  inertiaDecayRate: 0.95,
+  inertiaMinVelocity: 0.0001,
 } as const
