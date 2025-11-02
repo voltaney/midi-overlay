@@ -1,11 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import MidiJogCanvas from './MidiJogCanvas.vue'
 import MidiJogSettings from './MidiJogSettings.vue'
 import { useJogSettings } from '../../composables/useJogSettings'
 import { useMidiInput } from '../../composables/useMidiInput'
 import { useCanvasAnimation } from '../../composables/useCanvasAnimation'
-import { watch } from 'vue'
 
 const { settings } = useJogSettings()
 
