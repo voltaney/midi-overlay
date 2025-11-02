@@ -1,16 +1,9 @@
 import { reactive, watch } from 'vue'
 import { logger } from '@/utils/logger'
 import type { JogSettings } from '@/types'
+import { DEFAULT_JOG_SETTINGS } from '@/types'
 
 const STORAGE_KEY = 'MIDI_OVERLAY_SETTINGS'
-
-/** デフォルト設定値 */
-const defaultSettings: JogSettings = {
-  rotationSpeed: 0.04,
-  arcColor: '#00ffffff',
-  markerColor: '#00ffffff',
-  diskColor: '#00ffff38',
-}
 
 /**
  * ジョグホイール設定管理用composable
@@ -19,7 +12,7 @@ const defaultSettings: JogSettings = {
  * @returns settings - リアクティブな設定オブジェクト
  */
 export function useJogSettings() {
-  const settings = reactive<JogSettings>({ ...defaultSettings })
+  const settings = reactive<JogSettings>({ ...DEFAULT_JOG_SETTINGS })
 
   /**
    * LocalStorageから設定を読み込み
@@ -32,7 +25,7 @@ export function useJogSettings() {
 
         // 型チェック（簡易版）
         if (typeof parsed === 'object' && parsed !== null) {
-          Object.assign(settings, { ...defaultSettings, ...parsed })
+          Object.assign(settings, { ...DEFAULT_JOG_SETTINGS, ...parsed })
         }
       }
     } catch (e) {

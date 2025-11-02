@@ -1,27 +1,27 @@
 <script setup lang="ts">
 import ColorSetting from './ColorSettings.vue'
+import type { JogSettings } from '@/types'
 
 /** Props定義 */
 interface Props {
-  /** 回転速度 */
-  rotationSpeed: number
-  /** 円弧の色 (#RRGGBBAA形式) */
-  arcColor: string
-  /** マーカーの色 (#RRGGBBAA形式) */
-  markerColor: string
-  /** ディスクの色 (#RRGGBBAA形式) */
-  diskColor: string
+  /** ジョグホイール設定 */
+  settings: JogSettings
 }
 
 defineProps<Props>()
 
 /** Emits定義 */
 const emit = defineEmits<{
-  'update:rotationSpeed': [value: number]
-  'update:arcColor': [value: string]
-  'update:markerColor': [value: string]
-  'update:diskColor': [value: string]
+  'update:settings': [updates: Partial<JogSettings>]
 }>()
+
+/**
+ * 設定を更新
+ * 部分的な更新をemit
+ */
+function updateSettings(updates: Partial<JogSettings>): void {
+  emit('update:settings', updates)
+}
 </script>
 
 <template>
@@ -35,30 +35,30 @@ const emit = defineEmits<{
         <input
           id="rotationSpeed"
           type="range"
-          :value="rotationSpeed"
-          @input="emit('update:rotationSpeed', Number(($event.target as HTMLInputElement).value))"
+          :value="settings.rotationSpeed"
+          @input="updateSettings({ rotationSpeed: Number(($event.target as HTMLInputElement).value) })"
           min="0.01"
           max="0.2"
           step="0.01"
         />
-        <span>{{ rotationSpeed.toFixed(2) }}</span>
+        <span>{{ settings.rotationSpeed.toFixed(2) }}</span>
       </div>
 
       <ColorSetting
-        :model-value="arcColor"
-        @update:model-value="emit('update:arcColor', $event)"
+        :model-value="settings.arcColor"
+        @update:model-value="updateSettings({ arcColor: $event })"
         label="円弧の色"
       />
 
       <ColorSetting
-        :model-value="markerColor"
-        @update:model-value="emit('update:markerColor', $event)"
+        :model-value="settings.markerColor"
+        @update:model-value="updateSettings({ markerColor: $event })"
         label="マーカーの色"
       />
 
       <ColorSetting
-        :model-value="diskColor"
-        @update:model-value="emit('update:diskColor', $event)"
+        :model-value="settings.diskColor"
+        @update:model-value="updateSettings({ diskColor: $event })"
         label="中央ディスクの色"
       />
     </div>

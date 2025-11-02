@@ -67,12 +67,7 @@ onMounted(() => {
 
   <MidiJogCanvas ref="canvasRef" :angle="angle" :settings="settings" />
 
-  <MidiJogSettings
-    v-model:rotation-speed="settings.rotationSpeed"
-    v-model:arc-color="settings.arcColor"
-    v-model:marker-color="settings.markerColor"
-    v-model:disk-color="settings.diskColor"
-  />
+  <MidiJogSettings :settings="settings" @update:settings="Object.assign(settings, $event)" />
 </template>
 
 <style scoped>
