@@ -1,31 +1,27 @@
-<script setup>
+<script setup lang="ts">
 import ColorSetting from './ColorSettings.vue'
 
-defineProps({
-  rotationSpeed: {
-    type: Number,
-    required: true,
-  },
-  arcColor: {
-    type: String,
-    required: true,
-  },
-  markerColor: {
-    type: String,
-    required: true,
-  },
-  diskColor: {
-    type: String,
-    required: true,
-  },
-})
+/** Props定義 */
+interface Props {
+  /** 回転速度 */
+  rotationSpeed: number
+  /** 円弧の色 (#RRGGBBAA形式) */
+  arcColor: string
+  /** マーカーの色 (#RRGGBBAA形式) */
+  markerColor: string
+  /** ディスクの色 (#RRGGBBAA形式) */
+  diskColor: string
+}
 
-const emit = defineEmits([
-  'update:rotationSpeed',
-  'update:arcColor',
-  'update:markerColor',
-  'update:diskColor',
-])
+defineProps<Props>()
+
+/** Emits定義 */
+const emit = defineEmits<{
+  'update:rotationSpeed': [value: number]
+  'update:arcColor': [value: string]
+  'update:markerColor': [value: string]
+  'update:diskColor': [value: string]
+}>()
 </script>
 
 <template>
@@ -40,7 +36,7 @@ const emit = defineEmits([
           id="rotationSpeed"
           type="range"
           :value="rotationSpeed"
-          @input="emit('update:rotationSpeed', Number($event.target.value))"
+          @input="emit('update:rotationSpeed', Number(($event.target as HTMLInputElement).value))"
           min="0.01"
           max="0.2"
           step="0.01"

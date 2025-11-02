@@ -1,32 +1,42 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import MidiJogCanvas from './MidiJogCanvas.vue'
 import MidiJogSettings from './MidiJogSettings.vue'
-import { useJogSettings } from '../../composables/useJogSettings'
-import { useMidiInput } from '../../composables/useMidiInput'
-import { useCanvasAnimation } from '../../composables/useCanvasAnimation'
+import { useJogSettings } from '@/composables/useJogSettings'
+import { useMidiInput } from '@/composables/useMidiInput'
+import { useCanvasAnimation } from '@/composables/useCanvasAnimation'
+import { logger } from '@/utils/logger'
+import { MIDI_VALUES } from '@/constants/midi'
+import type { MidiMessage } from '@/types'
 
 const { settings } = useJogSettings()
 
-const angle = ref(0) // refに変更
-const canvasRef = ref(null)
+/** 回転角度（ラジアン） */
+const angle = ref(0)
+/** Canvasコンポーネントの参照 */
+const canvasRef = ref<InstanceType<typeof MidiJogCanvas> | null>(null)
 
-// Canvas描画
+/** Canvas描画処理 */
 const { requestRedraw } = useCanvasAnimation(() => {
   canvasRef.value?.draw()
 })
 
-// MIDIメッセージ処理
-function onMIDIMessage(msg) {
+/**
+ * MIDIメッセージ処理
+ * ジョグホイールの回転操作を検出して角度を更新
+ */
+function onMIDIMessage(msg: MidiMessage): void {
   const [, , data2] = msg.data
 
-  if (data2 === 127 || data2 === 0) {
+  // 最大値・最小値は無視
+  if (data2 === MIDI_VALUES.MAX_VALUE || data2 === MIDI_VALUES.MIN_VALUE) {
     return
   }
 
-  const delta = data2 - 64
+  // 中央値からの差分で回転方向と量を計算
+  const delta = data2 - MIDI_VALUES.NEUTRAL_VALUE
   if (delta !== 0) {
-    angle.value += delta * settings.rotationSpeed // .valueを追加
+    angle.value += delta * settings.rotationSpeed
     requestRedraw()
   }
 }
@@ -44,7 +54,7 @@ watch(
 )
 
 onMounted(() => {
-  console.log('draw once on mounted')
+  logger.debug('初回描画を実行')
   requestRedraw()
 })
 </script>

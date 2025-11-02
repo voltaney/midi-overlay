@@ -1,25 +1,34 @@
-<script setup>
-import { getOpacityFromHex, setOpacityToHex } from '../../composables/useJogSettings'
+<script setup lang="ts">
+import { getOpacityFromHex, setOpacityToHex } from '@/utils/colorUtils'
 
-const props = defineProps({
-  modelValue: {
-    type: String,
-    required: true,
-  },
-  label: {
-    type: String,
-    required: true,
-  },
-})
+/** Props定義 */
+interface Props {
+  /** カラー値 (#RRGGBBAA形式) */
+  modelValue: string
+  /** ラベル */
+  label: string
+}
 
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps<Props>()
 
-function updateColor(newColor) {
+/** Emits定義 */
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+}>()
+
+/**
+ * 色を更新（透明度は維持）
+ */
+function updateColor(newColor: string): void {
   const alpha = props.modelValue.slice(7, 9)
   emit('update:modelValue', newColor + alpha)
 }
 
-function updateOpacity(opacity) {
+/**
+ * 透明度を更新
+ */
+function updateOpacity(opacityStr: string): void {
+  const opacity = parseFloat(opacityStr)
   emit('update:modelValue', setOpacityToHex(props.modelValue, opacity))
 }
 </script>
@@ -31,14 +40,14 @@ function updateOpacity(opacity) {
       <input
         type="color"
         :value="modelValue.slice(0, 7)"
-        @input="updateColor($event.target.value)"
+        @input="updateColor(($event.target as HTMLInputElement).value)"
       />
       <div class="opacity-control">
         <label>透明度:</label>
         <input
           type="range"
           :value="getOpacityFromHex(modelValue)"
-          @input="updateOpacity($event.target.value)"
+          @input="updateOpacity(($event.target as HTMLInputElement).value)"
           min="0"
           max="1"
           step="0.01"
