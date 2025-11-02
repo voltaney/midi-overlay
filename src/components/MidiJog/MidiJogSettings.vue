@@ -11,7 +11,7 @@ interface Props {
   settings: JogSettings
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 /** Emits定義 */
 const emit = defineEmits<{
@@ -72,6 +72,22 @@ function handleImageRemove(): void {
 function openFileDialog(): void {
   fileInputRef.value?.click()
 }
+
+/**
+ * 円弧の半径変更ハンドラ
+ * 内円の半径とマーカーの長さを割合で調整
+ */
+function handleArcRadiusChange(event: Event): void {
+  const newArcRadius = Number((event.target as HTMLInputElement).value)
+  const oldArcRadius = props.settings.arcRadius
+  const changedRatio = newArcRadius / oldArcRadius
+
+  updateSettings({
+    arcRadius: newArcRadius,
+    diskRadius: Math.round(changedRatio * props.settings.diskRadius),
+    markerLength: Math.round(changedRatio * props.settings.markerLength),
+  })
+}
 </script>
 
 <template>
@@ -86,7 +102,9 @@ function openFileDialog(): void {
           id="rotationSpeed"
           type="range"
           :value="settings.rotationSpeed"
-          @input="updateSettings({ rotationSpeed: Number(($event.target as HTMLInputElement).value) })"
+          @input="
+            updateSettings({ rotationSpeed: Number(($event.target as HTMLInputElement).value) })
+          "
           min="0.01"
           max="0.2"
           step="0.01"
@@ -99,6 +117,20 @@ function openFileDialog(): void {
         @update:model-value="updateSettings({ arcColor: $event })"
         label="円弧の色"
       />
+
+      <div class="setting-item">
+        <label for="arcRadius">円弧の半径:</label>
+        <input
+          id="arcRadius"
+          type="range"
+          :value="settings.arcRadius"
+          @input="handleArcRadiusChange"
+          min="50"
+          max="150"
+          step="1"
+        />
+        <span>{{ settings.arcRadius }}</span>
+      </div>
 
       <ColorSetting
         :model-value="settings.markerColor"
@@ -120,7 +152,7 @@ function openFileDialog(): void {
           :value="settings.diskRadius"
           @input="updateSettings({ diskRadius: Number(($event.target as HTMLInputElement).value) })"
           min="10"
-          max="100"
+          :max="settings.arcRadius"
           step="1"
         />
         <span>{{ settings.diskRadius }}</span>
@@ -132,7 +164,9 @@ function openFileDialog(): void {
           id="markerWidth"
           type="range"
           :value="settings.markerWidth"
-          @input="updateSettings({ markerWidth: Number(($event.target as HTMLInputElement).value) })"
+          @input="
+            updateSettings({ markerWidth: Number(($event.target as HTMLInputElement).value) })
+          "
           min="1"
           max="10"
           step="1"
@@ -146,9 +180,11 @@ function openFileDialog(): void {
           id="markerLength"
           type="range"
           :value="settings.markerLength"
-          @input="updateSettings({ markerLength: Number(($event.target as HTMLInputElement).value) })"
+          @input="
+            updateSettings({ markerLength: Number(($event.target as HTMLInputElement).value) })
+          "
           min="10"
-          max="120"
+          :max="settings.arcRadius"
           step="1"
         />
         <span>{{ settings.markerLength }}</span>

@@ -62,10 +62,10 @@ function draw(): void {
 
     // 円形クリップ領域を作成（円弧のサイズ）
     ctx.beginPath()
-    ctx.arc(0, 0, CANVAS_CONFIG.ARC_RADIUS, 0, Math.PI * 2)
+    ctx.arc(0, 0, props.settings.arcRadius, 0, Math.PI * 2)
     ctx.clip()
 
-    const radius = CANVAS_CONFIG.ARC_RADIUS
+    const radius = props.settings.arcRadius
     const size = radius * 2
 
     // 画像を円の中心に配置して描画
@@ -73,20 +73,7 @@ function draw(): void {
     ctx.restore()
   }
 
-  // 円弧（外円）
-  ctx.beginPath()
-  ctx.arc(0, 0, CANVAS_CONFIG.ARC_RADIUS, 0, Math.PI * 2)
-  ctx.strokeStyle = props.settings.arcColor
-  ctx.lineWidth = CANVAS_CONFIG.ARC_LINE_WIDTH
-  ctx.stroke()
-
-  // 中心ディスク（内円）- 画像の上に描画
-  ctx.beginPath()
-  ctx.arc(0, 0, props.settings.diskRadius, 0, Math.PI * 2)
-  ctx.fillStyle = props.settings.diskColor
-  ctx.fill()
-
-  // マーカー（向きを示す線）- 画像の上に描画
+  // マーカー（向きを示す線）
   // 90度の位置（真右）に円中央から外側に伸びる
   ctx.beginPath()
   ctx.moveTo(0, 0)
@@ -94,6 +81,20 @@ function draw(): void {
   ctx.strokeStyle = props.settings.markerColor
   ctx.lineWidth = props.settings.markerWidth
   ctx.stroke()
+
+  // 中心ディスク（内円）- マーカーの上に描画
+  ctx.beginPath()
+  ctx.arc(0, 0, props.settings.diskRadius, 0, Math.PI * 2)
+  ctx.fillStyle = props.settings.diskColor
+  ctx.fill()
+
+  // 円弧（外円）- 一番上に描画
+  ctx.beginPath()
+  ctx.arc(0, 0, props.settings.arcRadius, 0, Math.PI * 2)
+  ctx.strokeStyle = props.settings.arcColor
+  ctx.lineWidth = CANVAS_CONFIG.ARC_LINE_WIDTH
+  ctx.stroke()
+
   ctx.restore()
 }
 
