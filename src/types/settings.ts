@@ -12,6 +12,8 @@ export interface JogSettings {
   diskColor: string
   /** マーカー（位置表示）の色 (hex: #RRGGBBAA) */
   markerColor: string
+  /** ディスク背景画像 (Base64形式、オプション) */
+  diskBackgroundImage?: string
 }
 
 /** デフォルトのジョグホイール設定値 */

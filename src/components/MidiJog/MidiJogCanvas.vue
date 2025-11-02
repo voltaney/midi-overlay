@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { CANVAS_CONFIG } from '@/constants/canvas'
 import type { JogSettings } from '@/types'
 
@@ -14,6 +14,30 @@ interface Props {
 const props = defineProps<Props>()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const backgroundImage = ref<HTMLImageElement | null>(null)
+
+/**
+ * 背景画像を読み込み
+ */
+watch(
+  () => props.settings.diskBackgroundImage,
+  (newImage) => {
+    if (newImage) {
+      const img = new Image()
+      img.onload = () => {
+        backgroundImage.value = img
+        // 画像読み込み完了後に再描画
+        draw()
+      }
+      img.src = newImage
+    } else {
+      backgroundImage.value = null
+      // 画像削除時も再描画
+      draw()
+    }
+  },
+  { immediate: true }
+)
 
 /**
  * Canvasに描画
@@ -32,6 +56,23 @@ function draw(): void {
   ctx.translate(canvasWidth / 2, canvasHeight / 2)
   ctx.rotate(props.angle)
 
+  // 背景画像（円弧のサイズに合わせて表示）
+  if (backgroundImage.value) {
+    ctx.save()
+
+    // 円形クリップ領域を作成（円弧のサイズ）
+    ctx.beginPath()
+    ctx.arc(0, 0, CANVAS_CONFIG.ARC_RADIUS, 0, Math.PI * 2)
+    ctx.clip()
+
+    const radius = CANVAS_CONFIG.ARC_RADIUS
+    const size = radius * 2
+
+    // 画像を円の中心に配置して描画
+    ctx.drawImage(backgroundImage.value, -radius, -radius, size, size)
+    ctx.restore()
+  }
+
   // 円弧（外円）
   ctx.beginPath()
   ctx.arc(0, 0, CANVAS_CONFIG.ARC_RADIUS, 0, Math.PI * 2)
@@ -39,13 +80,13 @@ function draw(): void {
   ctx.lineWidth = CANVAS_CONFIG.ARC_LINE_WIDTH
   ctx.stroke()
 
-  // 中心ディスク（内円）
+  // 中心ディスク（内円）- 画像の上に描画
   ctx.beginPath()
   ctx.arc(0, 0, CANVAS_CONFIG.DISK_RADIUS, 0, Math.PI * 2)
   ctx.fillStyle = props.settings.diskColor
   ctx.fill()
 
-  // マーカー（向きを示す線）
+  // マーカー（向きを示す線）- 画像の上に描画
   ctx.beginPath()
   ctx.moveTo(0, CANVAS_CONFIG.MARKER_START_Y)
   ctx.lineTo(0, CANVAS_CONFIG.MARKER_END_Y)
