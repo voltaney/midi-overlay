@@ -82,16 +82,17 @@ function draw(): void {
 
   // 中心ディスク（内円）- 画像の上に描画
   ctx.beginPath()
-  ctx.arc(0, 0, CANVAS_CONFIG.DISK_RADIUS, 0, Math.PI * 2)
+  ctx.arc(0, 0, props.settings.diskRadius, 0, Math.PI * 2)
   ctx.fillStyle = props.settings.diskColor
   ctx.fill()
 
   // マーカー（向きを示す線）- 画像の上に描画
+  // 90度の位置（真右）に円中央から外側に伸びる
   ctx.beginPath()
-  ctx.moveTo(0, CANVAS_CONFIG.MARKER_START_Y)
-  ctx.lineTo(0, CANVAS_CONFIG.MARKER_END_Y)
+  ctx.moveTo(0, 0)
+  ctx.lineTo(props.settings.markerLength, 0)
   ctx.strokeStyle = props.settings.markerColor
-  ctx.lineWidth = CANVAS_CONFIG.MARKER_LINE_WIDTH
+  ctx.lineWidth = props.settings.markerWidth
   ctx.stroke()
   ctx.restore()
 }

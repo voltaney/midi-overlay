@@ -112,6 +112,48 @@ function openFileDialog(): void {
         label="中央ディスクの色"
       />
 
+      <div class="setting-item">
+        <label for="diskRadius">中央ディスクの半径:</label>
+        <input
+          id="diskRadius"
+          type="range"
+          :value="settings.diskRadius"
+          @input="updateSettings({ diskRadius: Number(($event.target as HTMLInputElement).value) })"
+          min="10"
+          max="100"
+          step="1"
+        />
+        <span>{{ settings.diskRadius }}</span>
+      </div>
+
+      <div class="setting-item">
+        <label for="markerWidth">マーカーの太さ:</label>
+        <input
+          id="markerWidth"
+          type="range"
+          :value="settings.markerWidth"
+          @input="updateSettings({ markerWidth: Number(($event.target as HTMLInputElement).value) })"
+          min="1"
+          max="10"
+          step="1"
+        />
+        <span>{{ settings.markerWidth }}</span>
+      </div>
+
+      <div class="setting-item">
+        <label for="markerLength">マーカーの長さ:</label>
+        <input
+          id="markerLength"
+          type="range"
+          :value="settings.markerLength"
+          @input="updateSettings({ markerLength: Number(($event.target as HTMLInputElement).value) })"
+          min="10"
+          max="120"
+          step="1"
+        />
+        <span>{{ settings.markerLength }}</span>
+      </div>
+
       <div class="image-upload-section">
         <h4>ディスク背景画像</h4>
         <input
