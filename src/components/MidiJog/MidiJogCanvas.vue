@@ -103,15 +103,6 @@ defineExpose({
 })
 </script>
 
-<template>
-  <main>
-    <canvas id="jogCanvas" width="300" height="300" ref="canvasRef"></canvas>
-  </main>
-</template>
+<template><canvas id="jogCanvas" width="320" height="320" ref="canvasRef"></canvas></template>
 
-<style scoped>
-main {
-  background-color: #0f0;
-  height: 300px;
-}
-</style>
+<style scoped></style>
