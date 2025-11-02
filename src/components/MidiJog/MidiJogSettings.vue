@@ -245,93 +245,128 @@ function handleArcRadiusChange(event: Event): void {
 aside {
   display: flex;
   flex-direction: column;
-  padding: 0.75rem;
+  padding: 1rem;
   height: 100vh;
   overflow: auto;
+  background: #f5f5f5;
+  color: #333;
 }
 
 aside > h2 {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.1em;
+  margin: 0 0 1rem 0;
+  font-size: 1.2em;
+  color: #333;
+  font-weight: 600;
 }
 
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: start;
 }
 
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #f9f9f9;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .settings-section h3 {
   margin: 0;
-  font-size: 0.9em;
-  padding-bottom: 0.35rem;
-  border-bottom: 2px solid #007bff;
+  font-size: 1em;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3b82f6;
+  color: #3b82f6;
+  font-weight: 600;
 }
 
 .two-column-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .setting-column {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .setting-item {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .setting-item label {
-  font-weight: bold;
-  font-size: 0.75em;
+  font-weight: 600;
+  font-size: 0.85em;
+  color: #555;
 }
 
 .setting-item input[type='range'] {
   width: 100%;
+  height: 5px;
+  background: #ddd;
+  border-radius: 3px;
+  outline: none;
+}
+
+.setting-item input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.setting-item input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .setting-item span {
-  font-size: 0.7em;
+  font-size: 0.8em;
   color: #666;
   text-align: right;
+  font-family: 'Courier New', monospace;
 }
 
 .image-upload-section {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #fafafa;
 }
 
 .image-upload-section h4 {
   margin: 0;
-  font-size: 0.75em;
-  font-weight: bold;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #555;
 }
 
 .image-preview {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
   align-items: center;
 }
 
@@ -340,36 +375,42 @@ aside > h2 {
   height: 60px;
   object-fit: cover;
   border-radius: 50%;
-  border: 2px solid #ddd;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .upload-button,
 .remove-button {
-  padding: 0.35rem 0.6rem;
-  border: 1px solid #007bff;
-  background-color: #007bff;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  background: #3b82f6;
   color: white;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.7em;
+  font-size: 0.8em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .upload-button:hover:not(:disabled),
 .remove-button:hover {
-  background-color: #0056b3;
+  background: #2563eb;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
 }
 
 .upload-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .remove-button {
-  background-color: #dc3545;
-  border-color: #dc3545;
+  background: #ef4444;
 }
 
 .remove-button:hover {
-  background-color: #c82333;
+  background: #dc2626;
 }
 </style>
